@@ -9,6 +9,8 @@ from app import app
 from flask import render_template, request, redirect, url_for, flash, session, abort
 from werkzeug.utils import secure_filename
 from .forms import UploadForm
+import os 
+
 
 
 ###
@@ -25,8 +27,7 @@ def home():
 def about():
     """Render the website's about page."""
     return render_template('about.html', name="Mary Jane")
-
-
+    
 @app.route('/upload', methods=['POST', 'GET'])
 def upload():
     if not session.get('logged_in'):
@@ -45,12 +46,17 @@ def upload():
         return render_template('upload.html', form=form)
     if request.method == 'POST':
         # Get file data and save to your uploads folder
-
         flash('File Saved', 'success')
         return redirect(url_for('home'))
 
     return render_template('upload.html')
 
+@app.route('/files')
+def files():
+    "Render the website's files page"
+    images=get_uploaded_images()
+    return render_template('files.html', images=images)
+   
 
 @app.route('/login', methods=['POST', 'GET'])
 def login():
@@ -77,7 +83,22 @@ def logout():
 # The functions below should be applicable to all Flask apps.
 ###
 
+def get_uploaded_images():
+    if not session.get('logged_in'):
+        abort(401)
+    rootdir= os.getcwd()
+    filenames=[]
+    for subdir, dirs, files in os.walk(rootdir + '/app/static/uploads'):
+        for file in files:
+             filenames.append(os.path.join(subdir, file).split('/')[-1])
+    return filenames
+    
+
 # Flash errors from the form if validation fails
+
+
+    
+
 def flash_errors(form):
     for field, errors in form.errors.items():
         for error in errors:
